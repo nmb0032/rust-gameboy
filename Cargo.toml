@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/gameboy-core", "crates/gameboy-frontend" ]
+resolver = "3"
