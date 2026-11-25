@@ -168,10 +168,10 @@ Keep [Pan Docs](https://gbdev.io/pandocs/) open the entire time; it is the prima
 
 #### Step 1: Registers
 
-- [ ] Model `A, F, B, C, D, E, H, L`, `SP`, and `PC`.
-- [ ] Add helpers to read/write the 16-bit pairs `AF`, `BC`, `DE`, `HL`.
-- [ ] Model the flags in `F`: Z (bit 7), N (bit 6), H (bit 5), C (bit 4). The low 4 bits of `F` are always zero.
-- [ ] Initialize registers to the DMG post-boot values (`AF=01B0`, `BC=0013`, `DE=00D8`, `HL=014D`, `SP=FFFE`, `PC=0100`) so you can skip the boot ROM.
+- [x] Model `A, F, B, C, D, E, H, L`, `SP`, and `PC`.
+- [x] Add helpers to read/write the 16-bit pairs `AF`, `BC`, `DE`, `HL`.
+- [x] Model the flags in `F`: Z (bit 7), N (bit 6), H (bit 5), C (bit 4). The low 4 bits of `F` are always zero.
+- [x] Initialize registers to the DMG post-boot values (`AF=01B0`, `BC=0013`, `DE=00D8`, `HL=014D`, `SP=FFFE`, `PC=0100`) so you can skip the boot ROM.
 
 #### Step 2: The execution loop
 

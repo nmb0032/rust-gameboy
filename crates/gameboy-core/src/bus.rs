@@ -1,5 +1,5 @@
 //! Game Boy Memory map quick reference (16-bit address space):
-//! 
+//!
 //! 0000-3FFF: ROM Bank 0   (16kib) (Cartidge owned)
 //! 4000-7FFF: ROM Bank 01-NN (16kib) (Cartidge owned)
 //! 8000-9FFF: Video RAM (8kib)
@@ -17,7 +17,7 @@ use crate::cartridge::{Cartridge, RomError};
 #[derive(Debug)]
 pub struct Bus {
     cartridge: Option<Cartridge>,
-    vram : [u8; 0x2000],
+    vram: [u8; 0x2000],
     work_ram: [u8; 0x2000],
     oam: [u8; 160],
     io_registers: [u8; 128],
@@ -59,7 +59,7 @@ impl Bus {
             0xFF00..=0xFF7F => self.io_registers[(addr - 0xFF00) as usize],
             0xFF80..=0xFFFE => self.high_ram[(addr - 0xFF80) as usize],
             0xFFFF => self.interrupt_enable,
-            
+
             // Normally mapped to cartridge ROM
             0x0000..=0x7FFF => self
                 .cartridge
@@ -68,7 +68,7 @@ impl Bus {
 
             // No backing memory for this range (FEA0-FEFF)
             0xFEA0..=0xFEFF => 0xFF, // Not usable
-            _ => 0, // Default for unmapped addresses
+            _ => 0,                  // Default for unmapped addresses
         }
     }
 
@@ -82,9 +82,9 @@ impl Bus {
             0xFF80..=0xFFFE => self.high_ram[(addr - 0xFF80) as usize] = value,
             0xFFFF => self.interrupt_enable = value,
 
-            0x0000..=0x7FFF => {}, // Cartridge ROM (not implemented)
-            0xA000..=0xBFFF => {}, // Cartridge RAM (not implemented)
-            0xFEA0..=0xFEFF => {}, // Not usable
+            0x0000..=0x7FFF => {} // Cartridge ROM (not implemented)
+            0xA000..=0xBFFF => {} // Cartridge RAM (not implemented)
+            0xFEA0..=0xFEFF => {} // Not usable
         }
     }
 }
@@ -99,11 +99,9 @@ mod tests {
         rom[0x0147] = 0x00;
         rom[0x0148] = 0x00;
         rom[0x0149] = 0x00;
-        rom[0x014D] = rom[0x0134..=0x014C]
-            .iter()
-            .fold(0_u8, |checksum, &byte| {
-                checksum.wrapping_sub(byte).wrapping_sub(1)
-            });
+        rom[0x014D] = rom[0x0134..=0x014C].iter().fold(0_u8, |checksum, &byte| {
+            checksum.wrapping_sub(byte).wrapping_sub(1)
+        });
         rom
     }
 
@@ -146,11 +144,9 @@ mod tests {
         let mut bus = Bus::new();
         let mut rom = valid_rom();
         rom[0x0147] = 0x01;
-        rom[0x014D] = rom[0x0134..=0x014C]
-            .iter()
-            .fold(0_u8, |checksum, &byte| {
-                checksum.wrapping_sub(byte).wrapping_sub(1)
-            });
+        rom[0x014D] = rom[0x0134..=0x014C].iter().fold(0_u8, |checksum, &byte| {
+            checksum.wrapping_sub(byte).wrapping_sub(1)
+        });
 
         assert!(matches!(
             bus.load_cartridge(rom),

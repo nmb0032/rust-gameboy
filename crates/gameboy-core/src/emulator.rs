@@ -1,4 +1,3 @@
-
 use crate::bus::Bus;
 use crate::cartridge::RomError;
 
@@ -9,9 +8,7 @@ pub struct Emulator {
 
 impl Emulator {
     pub fn new() -> Self {
-        Self {
-            bus: Bus::new(),
-        }
+        Self { bus: Bus::new() }
     }
 
     pub fn load_rom(&mut self, rom_data: Vec<u8>) -> Result<(), RomError> {

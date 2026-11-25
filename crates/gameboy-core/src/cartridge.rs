@@ -22,7 +22,10 @@ impl std::fmt::Display for RomError {
                 "header checksum mismatch: calculated {calculated:#04X}, expected {expected:#04X}"
             ),
             Self::UnsupportedCartridgeType(cartridge_type) => {
-                write!(formatter, "unsupported cartridge type: {cartridge_type:#04X}")
+                write!(
+                    formatter,
+                    "unsupported cartridge type: {cartridge_type:#04X}"
+                )
             }
         }
     }
@@ -45,11 +48,9 @@ impl Cartridge {
         let ram_size = &rom[0x0149];
         let header_checksum = &rom[0x014D];
 
-        let expected_checksum = rom[0x0134..=0x014C]
-            .iter()
-            .fold(0_u8, |checksum, &byte| {
-                checksum.wrapping_sub(byte).wrapping_sub(1)
-            });
+        let expected_checksum = rom[0x0134..=0x014C].iter().fold(0_u8, |checksum, &byte| {
+            checksum.wrapping_sub(byte).wrapping_sub(1)
+        });
         if expected_checksum != *header_checksum {
             return Err(RomError::HeaderChecksumMismatch {
                 calculated: expected_checksum,
