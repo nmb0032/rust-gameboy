@@ -1,9 +1,20 @@
-#[derive(Default)]
-pub struct Emulator;
+
+use crate::bus::{Bus, RomError};
+
+#[derive(Default, Debug)]
+pub struct Emulator {
+    bus: Bus,
+}
 
 impl Emulator {
     pub fn new() -> Self {
-        Self
+        Self {
+            bus: Bus::new(),
+        }
+    }
+
+    pub fn load_rom(&mut self, rom_data: Vec<u8>) -> Result<(), RomError> {
+        self.bus.load_cartridge(rom_data)
     }
 
     pub fn step(&self) {

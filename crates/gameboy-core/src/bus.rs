@@ -12,8 +12,9 @@
 //! FF80-FFFE: High RAM (127b)
 //! FFFF: Interrupt Enable Register (1b)
 
-struct Bus {
-    //TODO: Add cartridge
+#[derive(Debug)]
+pub struct Bus {
+    cartridge: Option<Cartridge>,
     vram : [u8; 0x2000],
     work_ram: [u8; 0x2000],
     oam: [u8; 160],
@@ -22,9 +23,42 @@ struct Bus {
     interrupt_enable: u8,
 }
 
+#[derive(Debug)]
+struct Cartridge {
+    rom: Vec<u8>,
+}
+
+#[derive(Debug)]
+pub enum RomError {
+    TooShort,
+    HeaderChecksumMismatch { calculated: u8, expected: u8 },
+    UnsupportedCartridgeType(u8),
+}
+
+impl std::fmt::Display for RomError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::TooShort => write!(formatter, "ROM is too short to contain a cartridge header"),
+            Self::HeaderChecksumMismatch {
+                calculated,
+                expected,
+            } => write!(
+                formatter,
+                "header checksum mismatch: calculated {calculated:#04X}, expected {expected:#04X}"
+            ),
+            Self::UnsupportedCartridgeType(cartridge_type) => {
+                write!(formatter, "unsupported cartridge type: {cartridge_type:#04X}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for RomError {}
+
 impl Default for Bus {
     fn default() -> Self {
         Self {
+            cartridge: None,
             vram: [0; 0x2000],
             work_ram: [0; 0x2000],
             oam: [0; 160],
@@ -40,6 +74,11 @@ impl Bus {
         Self::default()
     }
 
+    pub fn load_cartridge(&mut self, rom: Vec<u8>) -> Result<(), RomError> {
+        self.cartridge = Some(Cartridge::new(rom)?);
+        Ok(())
+    }
+
     pub fn read(&self, addr: u16) -> u8 {
         // Match address to correct memory region
         match addr {
@@ -51,7 +90,11 @@ impl Bus {
             0xFF80..=0xFFFE => self.high_ram[(addr - 0xFF80) as usize],
             0xFFFF => self.interrupt_enable,
             
-            0x0000..=0x7FFF => 0, // Cartridge ROM (not implemented)
+            // Normally mapped to cartridge ROM
+            0x0000..=0x7FFF => self
+                .cartridge
+                .as_ref()
+                .map_or(0xFF, |cartridge| cartridge.read(addr)),
 
             // No backing memory for this range (FEA0-FEFF)
             0xFEA0..=0xFEFF => 0xFF, // Not usable
@@ -72,14 +115,109 @@ impl Bus {
             0x0000..=0x7FFF => {}, // Cartridge ROM (not implemented)
             0xA000..=0xBFFF => {}, // Cartridge RAM (not implemented)
             0xFEA0..=0xFEFF => {}, // Not usable
-            _ => {},
         }
+    }
+}
+
+impl Cartridge {
+    pub fn new(rom: Vec<u8>) -> Result<Self, RomError> {
+        if rom.len() < 0x0150 {
+            return Err(RomError::TooShort);
+        }
+
+        let title = &rom[0x0134..=0x0143].iter().map(|&c| c as char).collect::<String>();
+        let cartridge_type = &rom[0x0147];
+        let rom_size = &rom[0x0148];
+        let ram_size = &rom[0x0149];
+        let header_checksum = &rom[0x014D];
+
+        // check ROM header checksum
+        let expected_checksum = rom[0x0134..=0x014C].iter().fold(0_u8, |checksum, &byte| checksum.wrapping_sub(byte).wrapping_sub(1));
+        if expected_checksum != *header_checksum {
+            return Err(RomError::HeaderChecksumMismatch { calculated: expected_checksum, expected: *header_checksum });
+        }
+
+        // Support only ROM cartridges for now
+        if *cartridge_type != 0x00 {
+            return Err(RomError::UnsupportedCartridgeType(*cartridge_type));
+        }
+
+        Ok(Self { rom })
+    }
+
+    pub fn read(&self, address: u16) -> u8 {
+        self.rom[address as usize]
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn valid_rom() -> Vec<u8> {
+        let mut rom = vec![0; 0x8000];
+        rom[0x0134..=0x0143].copy_from_slice(b"TEST ROM\0\0\0\0\0\0\0\0");
+        rom[0x0147] = 0x00;
+        rom[0x0148] = 0x00;
+        rom[0x0149] = 0x00;
+        rom[0x014D] = rom[0x0134..=0x014C]
+            .iter()
+            .fold(0_u8, |checksum, &byte| {
+                checksum.wrapping_sub(byte).wrapping_sub(1)
+            });
+        rom
+    }
+
+    #[test]
+    fn test_load_valid_cartridge() {
+        let mut bus = Bus::new();
+        let mut rom = valid_rom();
+        rom[0x0000] = 0x12;
+        rom[0x7FFF] = 0x34;
+
+        assert!(bus.load_cartridge(rom).is_ok());
+        assert_eq!(bus.read(0x0000), 0x12);
+        assert_eq!(bus.read(0x7FFF), 0x34);
+    }
+
+    #[test]
+    fn test_rejects_short_cartridge() {
+        let mut bus = Bus::new();
+
+        assert!(matches!(
+            bus.load_cartridge(vec![0; 0x014F]),
+            Err(RomError::TooShort)
+        ));
+    }
+
+    #[test]
+    fn test_rejects_invalid_header_checksum() {
+        let mut bus = Bus::new();
+        let mut rom = valid_rom();
+        rom[0x014D] ^= 0xFF;
+
+        assert!(matches!(
+            bus.load_cartridge(rom),
+            Err(RomError::HeaderChecksumMismatch { .. })
+        ));
+    }
+
+    #[test]
+    fn test_rejects_unsupported_cartridge_type() {
+        let mut bus = Bus::new();
+        let mut rom = valid_rom();
+        rom[0x0147] = 0x01;
+        rom[0x014D] = rom[0x0134..=0x014C]
+            .iter()
+            .fold(0_u8, |checksum, &byte| {
+                checksum.wrapping_sub(byte).wrapping_sub(1)
+            });
+
+        assert!(matches!(
+            bus.load_cartridge(rom),
+            Err(RomError::UnsupportedCartridgeType(0x01))
+        ));
+    }
 
     #[test]
     fn test_vram_read() {

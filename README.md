@@ -136,10 +136,10 @@ Keep [Pan Docs](https://gbdev.io/pandocs/) open the entire time; it is the prima
 
 #### Step 3: Load a cartridge
 
-- [ ] In the frontend, read a `.gb` file from a command-line argument and pass the bytes to `Emulator::new`.
-- [ ] Parse the header (`0x0100-0x014F`): title (`0x0134`), cartridge type (`0x0147`), ROM size (`0x0148`), RAM size (`0x0149`).
-- [ ] Verify the header checksum at `0x014D` and return an error if it fails.
-- [ ] Support only ROM-only cartridges (type `0x00`) for now; return a clear error for other types.
+- [x] In the frontend, read a `.gb` file from a command-line argument and pass the bytes to `Emulator::new`.
+- [x] Parse the header (`0x0100-0x014F`): title (`0x0134`), cartridge type (`0x0147`), ROM size (`0x0148`), RAM size (`0x0149`).
+- [x] Verify the header checksum at `0x014D` and return an error if it fails.
+- [x] Support only ROM-only cartridges (type `0x00`) for now; return a clear error for other types.
 
 > Try it: print the parsed title and cartridge type for a homebrew ROM.
 
