@@ -12,6 +12,8 @@
 //! FF80-FFFE: High RAM (127b)
 //! FFFF: Interrupt Enable Register (1b)
 
+use crate::cartridge::{Cartridge, RomError};
+
 #[derive(Debug)]
 pub struct Bus {
     cartridge: Option<Cartridge>,
@@ -22,38 +24,6 @@ pub struct Bus {
     high_ram: [u8; 127],
     interrupt_enable: u8,
 }
-
-#[derive(Debug)]
-struct Cartridge {
-    rom: Vec<u8>,
-}
-
-#[derive(Debug)]
-pub enum RomError {
-    TooShort,
-    HeaderChecksumMismatch { calculated: u8, expected: u8 },
-    UnsupportedCartridgeType(u8),
-}
-
-impl std::fmt::Display for RomError {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::TooShort => write!(formatter, "ROM is too short to contain a cartridge header"),
-            Self::HeaderChecksumMismatch {
-                calculated,
-                expected,
-            } => write!(
-                formatter,
-                "header checksum mismatch: calculated {calculated:#04X}, expected {expected:#04X}"
-            ),
-            Self::UnsupportedCartridgeType(cartridge_type) => {
-                write!(formatter, "unsupported cartridge type: {cartridge_type:#04X}")
-            }
-        }
-    }
-}
-
-impl std::error::Error for RomError {}
 
 impl Default for Bus {
     fn default() -> Self {
@@ -116,37 +86,6 @@ impl Bus {
             0xA000..=0xBFFF => {}, // Cartridge RAM (not implemented)
             0xFEA0..=0xFEFF => {}, // Not usable
         }
-    }
-}
-
-impl Cartridge {
-    pub fn new(rom: Vec<u8>) -> Result<Self, RomError> {
-        if rom.len() < 0x0150 {
-            return Err(RomError::TooShort);
-        }
-
-        let title = &rom[0x0134..=0x0143].iter().map(|&c| c as char).collect::<String>();
-        let cartridge_type = &rom[0x0147];
-        let rom_size = &rom[0x0148];
-        let ram_size = &rom[0x0149];
-        let header_checksum = &rom[0x014D];
-
-        // check ROM header checksum
-        let expected_checksum = rom[0x0134..=0x014C].iter().fold(0_u8, |checksum, &byte| checksum.wrapping_sub(byte).wrapping_sub(1));
-        if expected_checksum != *header_checksum {
-            return Err(RomError::HeaderChecksumMismatch { calculated: expected_checksum, expected: *header_checksum });
-        }
-
-        // Support only ROM cartridges for now
-        if *cartridge_type != 0x00 {
-            return Err(RomError::UnsupportedCartridgeType(*cartridge_type));
-        }
-
-        Ok(Self { rom })
-    }
-
-    pub fn read(&self, address: u16) -> u8 {
-        self.rom[address as usize]
     }
 }
 

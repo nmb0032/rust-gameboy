@@ -1,5 +1,6 @@
 
-use crate::bus::{Bus, RomError};
+use crate::bus::Bus;
+use crate::cartridge::RomError;
 
 #[derive(Default, Debug)]
 pub struct Emulator {
