@@ -1,22 +1,30 @@
 use crate::bus::Bus;
 use crate::cartridge::RomError;
+use crate::cpu::Cpu;
 
 #[derive(Default, Debug)]
 pub struct Emulator {
     bus: Bus,
+    cpu: Cpu
 }
 
 impl Emulator {
     pub fn new() -> Self {
-        Self { bus: Bus::new() }
+        Self { bus: Bus::new(), cpu: Cpu::new() }
     }
 
     pub fn load_rom(&mut self, rom_data: Vec<u8>) -> Result<(), RomError> {
         self.bus.load_cartridge(rom_data)
     }
 
-    pub fn step(&self) {
-        println!("Stepping emulator");
+    // Returns number of cycles taken by the instruction
+    pub fn step(&self) -> u8 {
+        // Get current instruction addr
+
+        // Get opcode at that addr
+
+        // execute the instruction
+
     }
 }
 

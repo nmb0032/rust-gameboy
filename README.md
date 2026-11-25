@@ -175,8 +175,8 @@ Keep [Pan Docs](https://gbdev.io/pandocs/) open the entire time; it is the prima
 
 #### Step 2: The execution loop
 
-- [ ] Implement `step()`: fetch the byte at `PC`, advance `PC`, decode, execute, and return the cycles used.
-- [ ] Panic with the opcode and address on unimplemented instructions; this tells you exactly what to build next.
+- [x] Implement `step()`: fetch the byte at `PC`, advance `PC`, decode, execute, and return the cycles used.
+- [x] Panic with the opcode and address on unimplemented instructions; this tells you exactly what to build next.
 - [ ] Implement `NOP`, `JP nn`, and `LD r, n` and run them against a ROM.
 
 > Why: panicking on unknown opcodes turns the ROM itself into your to-do list.
