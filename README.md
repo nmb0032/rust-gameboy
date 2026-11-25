@@ -109,7 +109,7 @@ Keep [Pan Docs](https://gbdev.io/pandocs/) open the entire time; it is the prima
 
 #### Step 1: Read the memory map
 
-- [ ] Read the Pan Docs *Memory Map* page and write the regions as constants or a comment table in your code.
+- [x] Read the Pan Docs *Memory Map* page and write the regions as constants or a comment table in your code.
 
 | Range | Contents |
 | --- | --- |
@@ -127,10 +127,10 @@ Keep [Pan Docs](https://gbdev.io/pandocs/) open the entire time; it is the prima
 
 #### Step 2: Build the bus
 
-- [ ] Create a `Bus` with `read(addr: u16) -> u8` and `write(addr: u16, value: u8)`.
-- [ ] Back work RAM, VRAM, OAM, and high RAM with fixed-size arrays.
-- [ ] Store unhandled I/O registers in a plain array for now; you'll route them to real components later.
-- [ ] Unit test each region: write a value, read it back. Test the echo region mirrors work RAM.
+- [x] Create a `Bus` with `read(addr: u16) -> u8` and `write(addr: u16, value: u8)`.
+- [x] Back work RAM, VRAM, OAM, and high RAM with fixed-size arrays.
+- [x] Store unhandled I/O registers in a plain array for now; you'll route them to real components later.
+- [x] Unit test each region: write a value, read it back. Test the echo region mirrors work RAM.
 
 > Why: once every read and write goes through one function, adding a new component later is just another `match` arm.
 

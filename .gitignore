@@ -19,3 +19,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Include specific test ROMs
+!tests/fixtures/roms/dmg-acid2.gb
